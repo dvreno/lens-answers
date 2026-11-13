@@ -180,13 +180,6 @@ notes in its `memory/` or `.remember/` folders, into `briefsDir`. Lines that loo
 first. The server answers project questions from those briefs and rebuilds stale ones in the background when
 it starts. Building briefs sends those notes to the model back end.
 
-## Statute lookup (optional)
-
-Set `statutes.enabled` to `true` and a question that names a section ("NRS 118A.200") is answered from the
-Nevada Legislature's own page for that chapter, fetched live and never stored. It is an example of a source
-that is looked up fresh on each question; `server/sources/statutes.mjs` is the whole of it. The lookup depends
-on speech-to-text writing the chapter number correctly and on the website being reachable.
-
 ## Model back ends
 
 - `claude-code` (default): runs `claude -p` using your subscription. No API key. If `claude` is not a program
