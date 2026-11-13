@@ -1,0 +1,27 @@
+{
+  "port": 8790,
+  "tokenFile": "~/.config/lens-answers/token",
+  "llm": { "backend": "claude-code", "fastModel": "claude-haiku-5-5", "answerModel": "claude-haiku-5-5", "workModel": "claude-sonnet-5-5", "warm": true },
+  "asr": {
+    "url": "http://127.0.0.1:8089",
+    "model": "qwen3-asr",
+    "backup": { "enabled": false, "url": "", "model": "", "keyEnv": "LENS_ASR_BACKUP_KEY" }
+  },
+  "profile": { "wearer": "", "audience": "" },
+  "kb": { "root": "", "command": [], "env": {}, "timeoutMs": 4000 },
+  "routing": { "work": { "about": "", "always": [], "lean": [] } },
+  "statutes": { "enabled": false, "about": "Nevada Revised Statutes (NRS)", "chapterExamples": ["118A", "484B"], "sectionExample": "118A.200" },
+  "projects": [],
+  "sharedNotePaths": [],
+  "briefsDir": "~/.local/share/lens-answers/briefs",
+  "card": { "ttlMs": 7000, "heardMax": 80, "sourceMax": 60, "answerMax": 180, "nothingSolid": "show" },
+  "vad": {
+    "silenceMs": 1000, "minSpeechMs": 400, "maxUtteranceMs": 10000,
+    "shorten": [{ "afterMs": 4000, "silenceMs": 400 }, { "afterMs": 8000, "silenceMs": 200 }], "cutSearchMs": 2000
+  },
+  "callMode": false,
+  "work": {
+    "silenceMs": 1500, "topK": 10, "exact": true, "followUp": true,
+    "contextPack": "KB_CONTEXT_PACK.md", "passageChars": 4000, "totalChars": 36000
+  }
+}

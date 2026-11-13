@@ -1,0 +1,9 @@
+node_modules
+phone/vendor
+*.wav
+*.ogg
+*.log
+dist
+.DS_Store
+.superpowers
+.remember

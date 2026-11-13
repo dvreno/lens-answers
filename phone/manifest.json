@@ -1,0 +1,42 @@
+{
+  "id": "com.dvreno.lens-answers",
+  "name": "Lens Answers",
+  "version": "0.1.0",
+  "entry": "index.html",
+  "bridgeVersion": "2.0",
+  "schemaVersion": 2,
+  "permissionPolicyVersion": 1,
+  "permissions": [
+    {
+      "name": "storage",
+      "required": true,
+      "reason": "Remember the server address and token"
+    },
+    {
+      "name": "display",
+      "required": true,
+      "reason": "Show answer cards on the glasses"
+    },
+    {
+      "name": "network",
+      "required": true,
+      "reason": "Connect to your own Lens Answers server"
+    },
+    {
+      "name": "audio.capture",
+      "required": true,
+      "reason": "Stream the glasses microphone to your own server to hear questions"
+    },
+    {
+      "name": "device.events",
+      "required": true,
+      "reason": "Button press: dismiss a card or pause and resume; know when the glasses connect",
+      "scope": {
+        "types": [
+          "button",
+          "connection"
+        ]
+      }
+    }
+  ]
+}

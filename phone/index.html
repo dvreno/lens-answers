@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- connect-src: only the server address you type in; no other hosts. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src ws: wss:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
+  <title>Lens Answers</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="plugin.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Lens Answers</h1>
+      <span id="status" data-state="offline">offline</span>
+    </header>
+    <p id="notice" role="status">Starting…</p>
+
+    <section>
+      <div class="row">
+        <button id="toggle-pause" type="button" disabled>Pause</button>
+        <label class="check"><input id="call" type="checkbox"> On a call</label>
+        <label class="check"><input id="work" type="checkbox" disabled> Work mode</label>
+      </div>
+      <p class="muted">Work mode: every question goes to your own notes and documents, searched more deeply and answered by a stronger model. It waits a little longer for the end of a sentence and each answer takes longer. The box stays off when the server has no notes source set up.</p>
+      <p class="muted">Glasses button: a press dismisses a card, or pauses and resumes listening. A long press turns work mode on or off.</p>
+    </section>
+
+    <section>
+      <h2>Server</h2>
+      <label>Address <input id="server-url" type="text" placeholder="wss://your-mac.your-tailnet.ts.net" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <label>Token <input id="server-token" type="password" autocomplete="off" spellcheck="false"></label>
+      <button id="save" type="button">Save and connect</button>
+    </section>
+  </main>
+</body>
+</html>

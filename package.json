@@ -1,0 +1,28 @@
+{
+  "name": "lens-answers",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Answer cards on MemoMind glasses: a plugin that listens for questions and a small server that answers them",
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "sdk": "node scripts/sync-sdk.mjs",
+    "test": "node --test test/*.test.mjs",
+    "start": "node server/server.mjs",
+    "briefs": "node scripts/build-briefs.mjs",
+    "eval": "node scripts/eval.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
+    "opus-decoder": "^0.7.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.65.0",
+    "yaml": "^2.9.1"
+  },
+  "license": "MIT"
+}
