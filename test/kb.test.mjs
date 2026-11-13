@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defaults as nothingConfigured } from '../server/config.mjs';
 import { createKb } from '../server/sources/kb.mjs';
 import { writeAnswer } from '../server/answer.mjs';
 import { layoutCard } from '../phone/card-layout.js';
 
-const FAKE = new URL('./helpers/fake-kb-bridge.mjs', import.meta.url).pathname;
+const FAKE = fileURLToPath(new URL('./helpers/fake-kb-bridge.mjs', import.meta.url));
 
 // The defaults with a notes bridge configured (the fake spawn below runs the fake bridge whatever it names).
 function defaults() {
@@ -180,7 +181,7 @@ test('spawns the configured bridge command with KB_ROOT, the configured env, and
     assert.equal(opts.env.PYTHONDONTWRITEBYTECODE, '1'); // a Python bridge must not leave .pyc files beside the notes
     assert.equal(opts.env.PYTHONPATH, '/notes/root:/notes/root/lib');
     assert.notEqual(opts.cwd, '/notes/root');
-    assert.equal(opts.cwd, new URL('..', import.meta.url).pathname.replace(/\/$/, ''));
+    assert.equal(opts.cwd, resolve(fileURLToPath(new URL('..', import.meta.url))));
   }, { config });
 });
 

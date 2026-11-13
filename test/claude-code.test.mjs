@@ -215,3 +215,15 @@ test('warm: at most four standbys are kept, the oldest is stopped first; close()
   assert.equal((await after).text, 'still works');
   assert.equal(f.list.length, n, 'no standby is started after close()');
 });
+
+test('the program started is `claude` unless a command is given, whose own arguments come first', async () => {
+  const { llm, list } = cold({ command: ['node', 'C:\\tools\\claude\\cli.js'] });
+  const p = llm.complete(REQ);
+  await tick();
+  const [child] = list;
+  assert.equal(child.cmd, 'node');
+  assert.equal(child.args[0], 'C:\\tools\\claude\\cli.js');
+  assert.equal(child.args[1], '-p');
+  child.say(message('ok'));
+  assert.equal((await p).text, 'ok');
+});

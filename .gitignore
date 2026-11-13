@@ -2,6 +2,7 @@ node_modules
 phone/vendor
 *.wav
 *.ogg
+!test/fixtures/*.ogg
 *.log
 dist
 .DS_Store

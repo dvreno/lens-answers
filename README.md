@@ -5,10 +5,10 @@ short answer card appears on the lens a few seconds later, with what it heard an
 There is no wake word and nothing to tap.
 
 It is two parts: a plain browser plugin (`phone/`) that streams the glasses microphone, and a small Node
-server on your Mac that does the rest. Speech-to-text runs on the Mac, so audio stays there. Only the text of
-a question goes to the model.
+server on your own computer that does the rest. Speech-to-text runs on that computer, so audio stays there.
+Only the text of a question goes to the model.
 
-    glasses mic -> phone plugin -> WebSocket -> server on your Mac
+    glasses mic -> phone plugin -> WebSocket -> server on your computer
                                                  Opus decode, cut into sentences, local speech-to-text,
                                                  "is this a question, and where should I look?",
                                                  look it up, write a short answer
@@ -43,10 +43,15 @@ the model, so a question cannot be sent somewhere this server cannot search.
 
 ## Setup
 
-You need a Mac, Node 20 or newer, a checkout of MemoMind's
+You need Node 22 or newer, a checkout of MemoMind's
 [plugin-open-platform](https://github.com/memomind-open/plugin-open-platform) (the Web SDK and Studio) next to
 this folder, a local speech-to-text server, and either the `claude` command (Claude Code, logged in) or an
 Anthropic API key.
+
+Platforms: the server and its tests are plain Node and are run on macOS, Linux and Windows by the checks in
+`.github/workflows/test.yml`. The whole thing working together (speech server, model, Studio) has only been
+tried on a Mac so far. Paths in this README are written the macOS and Linux way; on Windows `~` is your user
+folder (`C:\Users\you`), so the config is `C:\Users\you\.config\lens-answers\config.json`.
 
     npm install
     npm run setup
@@ -61,14 +66,16 @@ Then:
 
     npm start
 
-The server binds `127.0.0.1` only and creates `~/.config/lens-answers/token` (mode 600) on first run. Load the
+The server binds `127.0.0.1` only and creates `~/.config/lens-answers/token` on first run, readable by you
+only (mode 600; Windows has no such modes, so there the file is as private as your user folder). Load the
 plugin as described under "Phone plugin" and enter the server address and that token on its page.
 
 ### Speech-to-text
 
-The server posts each sentence to an OpenAI-style `/v1/audio/transcriptions` endpoint at `asr.url`, with the
-model name `asr.model`. Any local server with that endpoint works. This project is developed against
-[audio.cpp](https://github.com/0xShug0/audio.cpp) with Qwen3-ASR:
+The server posts each sentence (a short WAV file) to an OpenAI-style `/v1/audio/transcriptions` endpoint at
+`asr.url`, with the model name `asr.model`, and reads `text` from the JSON reply. Any speech server with that
+endpoint should work on any system; set `asr.url` and `asr.model` to match it. Only one has been tried: this
+project is developed on a Mac against [audio.cpp](https://github.com/0xShug0/audio.cpp) with Qwen3-ASR:
 
     brew tap 0xShug0/audio-cpp && brew trust 0xShug0/audio-cpp && brew install audio-cpp
     mkdir -p ~/audio-models && cd ~/audio-models
@@ -178,7 +185,9 @@ on speech-to-text writing the chapter number correctly and on the website being 
 
 ## Model back ends
 
-- `claude-code` (default): runs `claude -p` using your subscription. No API key. It is started with
+- `claude-code` (default): runs `claude -p` using your subscription. No API key. If `claude` is not a program
+  your system can start directly (on Windows, an npm install of Claude Code is a script, not a program), say
+  how to start it in `llm.claudeCommand`, for example `["node", "C:\\path\\to\\claude-code\\cli.js"]`. It is started with
   `--safe-mode`, so your own CLAUDE.md, skills, plugins, hooks and MCP servers are not loaded into the prompt.
   (Measured: without that flag one trivial call carried a prompt of roughly a million tokens.) Each call is
   answered by its own `claude` process over the stream protocol, and the answer is taken the moment the
@@ -258,9 +267,9 @@ The server listens on `127.0.0.1` only. Expose it to your phone with Tailscale r
 
     tailscale serve --bg http://127.0.0.1:8790
 
-and enter `wss://<your-mac>.<your-tailnet>.ts.net` as the address on the phone page. Because the server binds
+and enter `wss://<your-computer>.<your-tailnet>.ts.net` as the address on the phone page. Because the server binds
 `127.0.0.1` only, a LAN address such as `ws://192.168.x.x:8790` does not reach it; `ws://127.0.0.1:8790` works
-only for the Browser Studio simulator on the same Mac. The token travels in the first socket message, which
+only for the Browser Studio simulator on the same computer. The token travels in the first socket message, which
 `wss://` encrypts. (This path has not been tested end to end yet.)
 
 ## Pause, call mode
@@ -282,7 +291,7 @@ If the local speech server fails, an utterance can be sent to any service with a
 `asr.backup.url` and `asr.backup.model`, and put the key in the environment variable named by `asr.backup.keyEnv`
 (default `LENS_ASR_BACKUP_KEY`). The server tells the lens as soon as an utterance has gone through the
 backup, and the status then reads `listening (backup)` until the local server is used again. With it off,
-audio never leaves the Mac.
+audio never leaves your computer.
 
 ## Privacy rules
 
@@ -292,13 +301,13 @@ audio never leaves the Mac.
   or retrieved.
 - Spoken text, passages from your notes, statute pages and web results are treated as data; prompts tell the
   model to ignore instructions inside them.
-- The only audio that can leave the Mac is through the speech-to-text backup, which is off by default.
+- The only audio that can leave your computer is through the speech-to-text backup, which is off by default.
 - Model calls (understanding the question, writing the answer, building project briefs) go to the model back
   end you chose. Questions routed to the web are sent to a web search.
 - With the `claude-code` back end a prompt's instructions are a command-line argument, which other programs
-  on the Mac can see. Nothing from your notes is ever placed there; passages and the context pack travel in
+  on your computer can see. Nothing from your notes is ever placed there; passages and the context pack travel in
   the message instead. `profile.wearer`, `profile.audience` and `routing.work.about` are part of those
-  instructions, so keep them to what you would not mind another program on your Mac reading.
+  instructions, so keep them to what you would not mind another program on your computer reading.
 - The token file is mode 600; the token is never put in a URL or a log.
 - You are wearing a microphone around other people. Tell them, and check what the law where you are says
   about recording or transcribing a conversation.
@@ -307,7 +316,7 @@ audio never leaves the Mac.
 
 - `npm run setup`: first-run setup and checks (above). `npm run sdk` copies the Web SDK only.
 - `npm run briefs`: build the project briefs (prints project names and written/failed only).
-- `node scripts/say-test.mjs "<sentence>"`: speaks a synthetic sentence at the running server and prints each
+- `node scripts/say-test.mjs "<sentence>"` (macOS only; needs `ffmpeg`): speaks a synthetic sentence at the running server and prints each
   server message with its time from the end of speech. It connects as the one client, replacing the phone.
   `--redact` prints no card text; `--then "<sentence>"` speaks a second sentence on the same connection.
 - `npm run eval -- --retrieval-only` or `npm run eval -- --backend claude-code --limit 12`: a text-level run of
@@ -349,7 +358,9 @@ One Mac, the `claude-code` back end, one run each; treat them as rough.
   `Nothing solid on this one`; it never falls through to general knowledge.
 - One phone at a time; a second connection replaces the first.
 - One text size and brightness on the lens (the Web SDK has no size option); long answers are cut to fit.
-- No hosted version and no phone-only version: it needs your own Mac running the server.
+- No hosted version and no phone-only version: it needs your own computer running the server.
+- Outside macOS only the automated tests have been run. A real session on Linux or Windows, with another
+  speech server, has not been tried.
 
 ## License
 

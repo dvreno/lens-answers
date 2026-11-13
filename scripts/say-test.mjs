@@ -6,7 +6,7 @@
 //   node scripts/say-test.mjs --redact "..."   prints only flags and the source prefix, never text
 //   node scripts/say-test.mjs "stop listening" --then "what is the capital of france"   same connection
 //
-// Synthesizes with macOS `say`, encodes 16 kHz mono Opus in 20 ms frames with ffmpeg, then streams the
+// macOS only. Synthesizes with macOS `say`, encodes 16 kHz mono Opus in 20 ms frames with ffmpeg, then streams the
 // frames in real time (100 ms chunks, the phone's wire format) followed by 1 s of silence.
 // This connects as THE client: it replaces whatever phone is connected. The token is read from the
 // token file, sent only in the hello message, and never printed or put in a URL.
@@ -21,13 +21,14 @@ import { loadConfig, expandHome } from '../server/config.mjs';
 import { encodeChunk } from '../phone/lib/wire.js';
 import { oggPackets } from '../test/helpers/ogg-packets.mjs';
 
-const FFMPEG = process.env.FFMPEG || '/opt/homebrew/bin/ffmpeg';
+const FFMPEG = process.env.FFMPEG || 'ffmpeg'; // from the PATH, or the program named in FFMPEG
 const FRAME_MS = 20;
 const PAD_MS = 1000;
 const CHUNK_FRAMES = 5;
 
 /** Opus packets (20 ms each) of a synthetic sentence plus PAD_MS of trailing silence. */
 export function synthesize(sentence) {
+  if (process.platform !== 'darwin') throw new Error('say-test speaks with the macOS `say` voice, so it runs on a Mac only');
   const dir = mkdtempSync(join(tmpdir(), 'lens-say-'));
   try {
     const aiff = join(dir, 's.aiff');

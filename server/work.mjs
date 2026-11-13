@@ -15,7 +15,7 @@ const MIN_QUOTE_CHARS = 12; // a shorter quote from the reference notes proves n
 const MIN_PASSAGE_CHARS = 200; // a passage the character limit would cut below this is left out
 
 // The system prompt holds no knowledge base text: with the claude-code back end it is a command-line
-// argument, which other programs on the Mac can see. The reference notes travel in the user message.
+// argument, which other programs on the computer can see. The reference notes travel in the user message.
 function systemPrompt(hasPack, audience = '') {
   const notes = hasPack
     ? ' The reference notes explain this office\'s terms, systems, people and known issues; use them to '

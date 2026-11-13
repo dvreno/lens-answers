@@ -11,7 +11,9 @@ export function createLlm(config, deps = {}) {
   let impl;
   if (backend === 'anthropic-api') impl = createAnthropicBackend({ client: deps.client });
   else if (backend === 'claude-code') {
-    impl = createClaudeCodeBackend({ spawn: deps.spawn, timeoutMs: deps.timeoutMs, warm: deps.warm ?? config.llm.warm });
+    impl = createClaudeCodeBackend({
+      spawn: deps.spawn, command: config.llm.claudeCommand, timeoutMs: deps.timeoutMs, warm: deps.warm ?? config.llm.warm,
+    });
   }
   else throw new Error(`Unknown llm backend: ${backend}`);
   const models = { fast: config.llm.fastModel, answer: config.llm.answerModel, work: config.llm.workModel };

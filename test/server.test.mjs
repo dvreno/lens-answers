@@ -123,7 +123,7 @@ test('token file is created with mode 600 and 32 random bytes of hex, then reuse
   const h = await harness(t);
   const token = h.token();
   assert.match(token, /^[0-9a-f]{64}$/);
-  assert.equal(statSync(h.config.tokenFile).mode & 0o777, 0o600);
+  if (process.platform !== 'win32') assert.equal(statSync(h.config.tokenFile).mode & 0o777, 0o600); // Windows has no such modes
   const again = await startServer(h.config, {
     createOpusDecoder: fakeDecoder([]), createAsr: () => ({}), createUnderstand: () => async () => ({ kind: 'none' }),
     createKb: () => ({ close() {} }), createStatutes: () => ({}), createProjects: () => ({}), createLlm: () => ({}),
@@ -436,7 +436,7 @@ test('the brief rebuild never delays startup and is skipped when briefs are fres
 });
 
 test('real audio path: fixture ogg packets sent as wire chunks reach asr as one utterance', async (t) => {
-  const packets = oggPackets(await fixtureOgg('library'));
+  const packets = oggPackets(await fixtureOgg());
   // The segmenter's max cut ends the utterance deterministically: 50 frames (1 s).
   const h = await harness(t, {
     config: { vad: { silenceMs: 700, minSpeechMs: 400, maxUtteranceMs: 1000 } },

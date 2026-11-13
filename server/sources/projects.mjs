@@ -1,7 +1,7 @@
 // Project briefs: a short daily summary per project, written by the model from the project's README
 // and Claude's notes, then served as passages. Notes are filtered for credential-looking lines first.
 import { readFileSync, readdirSync, statSync, mkdirSync, writeFileSync, utimesSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 const README_MAX = 6000;
 const NOTES_MAX = 20000;
@@ -48,7 +48,7 @@ function listMd(dir, accept) {
     const file = join(dir, name);
     try {
       const st = statSync(file);
-      if (st.isFile()) out.push({ file, rel: `${dir.split('/').pop()}/${name}`, mtime: st.mtimeMs });
+      if (st.isFile()) out.push({ file, rel: `${basename(dir)}/${name}`, mtime: st.mtimeMs });
     } catch { /* vanished; skip */ }
   }
   return out;

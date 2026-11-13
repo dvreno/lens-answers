@@ -24,10 +24,14 @@ function splitSources(text) {
  *   - the answer is taken when the model's message ends; the CLI's own wrap-up after it is not waited for;
  *   - `warm` (default on): after a call, a process with the same arguments is started at once and waits
  *     for the next one, so that call skips the start-up. A waiting process makes no model call.
- * @param {{spawn?: Function, timeoutMs?: number, warm?: boolean, standbyMaxAgeMs?: number, now?: () => number}} [deps]
+ * @param {{spawn?: Function, command?: string[], timeoutMs?: number, warm?: boolean, standbyMaxAgeMs?: number, now?: () => number}} [deps]
+ *   `command`: the program and its own arguments (llm.claudeCommand), default ['claude']
  */
 export function createClaudeCodeBackend(deps = {}) {
   const spawn = deps.spawn || nodeSpawn;
+  // The program to start, then any arguments of its own. Never run through a shell: the instructions are an
+  // argument, and a shell would read them as commands.
+  const [program, ...programArgs] = Array.isArray(deps.command) && deps.command.length ? deps.command : ['claude'];
   const timeoutMs = deps.timeoutMs ?? TIMEOUT_MS;
   const maxAgeMs = deps.standbyMaxAgeMs ?? STANDBY_MAX_AGE_MS;
   const now = deps.now ?? Date.now;
@@ -36,7 +40,7 @@ export function createClaudeCodeBackend(deps = {}) {
 
   // A started process. Output before it is asked anything is ignored; `ended` records an early death.
   function start(args) {
-    const child = spawn('claude', args, { stdio: ['pipe', 'pipe', 'pipe'] });
+    const child = spawn(program, [...programArgs, ...args], { stdio: ['pipe', 'pipe', 'pipe'] });
     const proc = { child, bornAt: now(), ended: null, stderr: '', onEvent: null, onEnd: null };
     let buf = '';
     child.stdout.on('data', (d) => {

@@ -145,7 +145,11 @@ test('timeout, network error or 500 gives empty passages', async () => {
     signal.addEventListener('abort', () => reject(signal.reason));
   });
   const slow = createStatutes({ fetchImpl: hang, now: fixedNow, timeoutMs: 20 });
-  assert.deepEqual(await slow.lookup({ chapters: ['999'], query: 'gadget' }), { passages: [] });
+  // The timeout's own timer does not keep Node running on every version, so this test holds it open.
+  const hold = setInterval(() => {}, 1000);
+  try {
+    assert.deepEqual(await slow.lookup({ chapters: ['999'], query: 'gadget' }), { passages: [] });
+  } finally { clearInterval(hold); }
 
   const boom = createStatutes({ fetchImpl: async () => { throw new Error('down'); }, now: fixedNow });
   assert.deepEqual(await boom.lookup({ chapters: ['999'], query: 'gadget' }), { passages: [] });

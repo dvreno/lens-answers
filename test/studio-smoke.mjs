@@ -31,7 +31,7 @@ const { chromium } = require('playwright');
 
 const STUDIO = process.env.STUDIO_URL || 'http://127.0.0.1:4173';
 const OUT = process.env.OUT_DIR || mkdtempSync(join(tmpdir(), 'lens-smoke-out-')); // never inside the repo by default
-const FFMPEG = process.env.FFMPEG || '/opt/homebrew/bin/ffmpeg';
+const FFMPEG = process.env.FFMPEG || 'ffmpeg'; // from the PATH, or the program named in FFMPEG
 const SENTENCE = 'How tall is Mount Everest?';
 const KEYWORD = 'Everest';
 

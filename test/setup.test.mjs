@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { runSetup } from '../scripts/setup.mjs';
+import { fileURLToPath } from 'node:url';
+import { runSetup, isOnPath } from '../scripts/setup.mjs';
 
-const EXAMPLE = new URL('../config.example.json', import.meta.url).pathname;
+const EXAMPLE = fileURLToPath(new URL('../config.example.json', import.meta.url));
 
 // A machine where everything is in place; each test takes one thing away.
 function machine(t, over = {}) {
@@ -41,7 +42,7 @@ test('a missing config is created from the example, readable by the owner only',
   const m = machine(t);
   const r = await runSetup(m.args);
   assert.deepEqual(JSON.parse(readFileSync(m.args.configPath, 'utf8')), JSON.parse(readFileSync(EXAMPLE, 'utf8')));
-  assert.equal(statSync(m.args.configPath).mode & 0o777, 0o600);
+  if (process.platform !== 'win32') assert.equal(statSync(m.args.configPath).mode & 0o777, 0o600); // Windows has no such modes
   assert.match(r.lines.join('\n'), /ok\s+Config created/);
 });
 
@@ -106,4 +107,17 @@ test('a config that cannot be created is one todo line, not a crash', async (t) 
   const r = await runSetup(m.args);
   assert.equal(r.ready, false);
   assert.match(todos(r).join('\n'), /todo\s+Config could not be created at/);
+});
+
+test('isOnPath finds a program on the PATH, and on Windows tries the usual program extensions', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'lens-path-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  writeFileSync(join(dir, 'plainprog'), '#!/bin/sh\n', { mode: 0o755 });
+  writeFileSync(join(dir, 'winprog.CMD'), '@echo off\r\n', { mode: 0o755 });
+  const env = { PATH: dir, PATHEXT: '.COM;.EXE;.CMD' };
+  assert.equal(isOnPath('plainprog', env, 'linux'), true);
+  assert.equal(isOnPath('nosuchprog', env, 'linux'), false);
+  assert.equal(isOnPath('winprog', env, 'linux'), false, 'extensions are a Windows rule only');
+  assert.equal(isOnPath('winprog', env, 'win32'), true);
+  assert.equal(isOnPath('nosuchprog', env, 'win32'), false);
 });

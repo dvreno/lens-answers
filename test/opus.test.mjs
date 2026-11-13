@@ -5,7 +5,7 @@ import { fixtureOgg } from './fixtures/make-fixtures.mjs';
 import { createOpusDecoder } from '../server/audio/opus.mjs';
 
 test('decodes a 20 ms frame to 320 samples', async () => {
-  const [pkt] = oggPackets(await fixtureOgg('hello'));
+  const [pkt] = oggPackets(await fixtureOgg());
   const dec = await createOpusDecoder();
   const pcm = dec.decode(pkt);
   assert.ok(pcm instanceof Int16Array);
@@ -14,7 +14,7 @@ test('decodes a 20 ms frame to 320 samples', async () => {
 });
 
 test('decoded speech carries signal and stays within int16', async () => {
-  const packets = oggPackets(await fixtureOgg('library'));
+  const packets = oggPackets(await fixtureOgg());
   assert.ok(packets.length > 20);
   const dec = await createOpusDecoder();
   let peak = 0;
@@ -31,7 +31,7 @@ test('decoded speech carries signal and stays within int16', async () => {
 });
 
 test('decoders are independent instances', async () => {
-  const [pkt] = oggPackets(await fixtureOgg('hello'));
+  const [pkt] = oggPackets(await fixtureOgg());
   const a = await createOpusDecoder();
   const b = await createOpusDecoder();
   a.free();

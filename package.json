@@ -13,7 +13,7 @@
     "eval": "node scripts/eval.mjs"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

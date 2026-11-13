@@ -1,7 +1,7 @@
 {
   "port": 8790,
   "tokenFile": "~/.config/lens-answers/token",
-  "llm": { "backend": "claude-code", "fastModel": "claude-haiku-5-5", "answerModel": "claude-haiku-5-5", "workModel": "claude-sonnet-5-5", "warm": true },
+  "llm": { "backend": "claude-code", "fastModel": "claude-haiku-5-5", "answerModel": "claude-haiku-5-5", "workModel": "claude-sonnet-5-5", "warm": true, "claudeCommand": ["claude"] },
   "asr": {
     "url": "http://127.0.0.1:8089",
     "model": "qwen3-asr",

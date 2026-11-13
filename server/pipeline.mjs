@@ -81,7 +81,7 @@ export function createPipeline({
       const r = await asr.transcribe(pcm);
       if (gen !== generation) return;
       const nextVia = r?.via === 'backup' ? 'backup' : 'local';
-      if (nextVia !== via) { // announce at once: audio may be leaving the Mac now
+      if (nextVia !== via) { // announce at once: audio may be leaving this computer now
         via = nextVia;
         state(current);
       }

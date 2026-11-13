@@ -7,12 +7,12 @@ export const DEFAULT_CONFIG_PATH = '~/.config/lens-answers/config.json';
 export function expandHome(p) {
   if (typeof p !== 'string') return p;
   if (p === '~') return homedir();
-  if (p.startsWith('~/')) return join(homedir(), p.slice(2));
+  if (p.startsWith('~/') || p.startsWith('~\\')) return join(homedir(), p.slice(2));
   return p;
 }
 
-// `~` at the start of each entry of a colon-separated list (PYTHONPATH and the like).
-const expandHomeList = (value) => String(value).split(':').map(expandHome).join(':');
+// `~` at the start of each entry of a path list (PYTHONPATH and the like; entries separated by : or, on Windows, ;).
+const expandHomeList = (value) => String(value).replace(/(^|[:;])~(?=[\\/:;]|$)/g, (_, before) => `${before}${homedir()}`);
 
 /** True when a bridge to the wearer's own notes is configured (the work route and work mode exist). */
 export function kbEnabled(config) {
@@ -25,9 +25,12 @@ export function defaults() {
     tokenFile: '~/.config/lens-answers/token',
     // warm: claude-code only; keep a started `claude` process waiting for the next call (faster cards).
     // workModel: writes the answer in work mode (stronger and slower than answerModel).
+    // claudeCommand: claude-code only; how to start Claude Code (the program, then any arguments of its own).
+    // Change it when `claude` is not a program your system can start directly, e.g. on Windows with an npm
+    // install: ["node", "C:\\path\\to\\claude-code\\cli.js"].
     llm: {
       backend: 'claude-code', fastModel: 'claude-haiku-5-5', answerModel: 'claude-haiku-5-5',
-      workModel: 'claude-sonnet-5-5', warm: true,
+      workModel: 'claude-sonnet-5-5', warm: true, claudeCommand: ['claude'],
     },
     asr: {
       url: 'http://127.0.0.1:8089',
@@ -163,6 +166,11 @@ export function loadConfig(env = process.env, path = DEFAULT_CONFIG_PATH) {
   }
   cfg.tokenFile = expandHome(cfg.tokenFile);
   cfg.briefsDir = expandHome(cfg.briefsDir);
+  const claude = cfg.llm.claudeCommand;
+  if (!Array.isArray(claude) || !claude.length || claude.some((part) => typeof part !== 'string' || !part)) {
+    throw new Error('llm.claudeCommand must be a list of strings: the program, then its arguments');
+  }
+  cfg.llm.claudeCommand = claude.map(expandHome);
   cfg.kb.root = expandHome(cfg.kb.root);
   const command = cfg.kb.command ?? [];
   if (!Array.isArray(command) || command.some((part) => typeof part !== 'string' || !part)) {

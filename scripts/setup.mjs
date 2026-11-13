@@ -12,15 +12,23 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { DEFAULT_CONFIG_PATH, expandHome, kbEnabled, loadConfig } from '../server/config.mjs';
 import { syncSdk as realSyncSdk } from './sync-sdk.mjs';
 
-const MIN_NODE = 20;
+const MIN_NODE = 22;
 const SPEECH_TIMEOUT_MS = 1500;
 const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
 
-/** True when `name` is a program on the PATH of `env`. */
-export function isOnPath(name, env = process.env) {
-  return String(env.PATH ?? '').split(delimiter).filter(Boolean).some((dir) => {
-    try { accessSync(join(dir, name), constants.X_OK); return true; } catch { return false; }
-  });
+/**
+ * True when `name` is a program on the PATH of `env`. On Windows a program is found by its extension
+ * (claude.exe, claude.cmd: the PATHEXT list), and the PATH variable may be spelled Path.
+ */
+export function isOnPath(name, env = process.env, platform = process.platform) {
+  const windows = platform === 'win32';
+  const dirs = String(env.PATH ?? env.Path ?? '').split(windows ? ';' : delimiter).filter(Boolean);
+  const names = windows
+    ? ['', ...String(env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD').split(';').filter(Boolean)].map((ext) => `${name}${ext}`)
+    : [name];
+  return dirs.some((dir) => names.some((file) => {
+    try { accessSync(join(dir, file), windows ? constants.F_OK : constants.X_OK); return true; } catch { return false; }
+  }));
 }
 
 /**
@@ -77,8 +85,15 @@ export async function runSetup({
     if (backend === 'anthropic-api') {
       if (env.ANTHROPIC_API_KEY) ok('Model back end: anthropic-api (ANTHROPIC_API_KEY is set)');
       else todo('Model back end: anthropic-api needs ANTHROPIC_API_KEY in the environment when you start the server.');
-    } else if (onPath('claude')) ok(`Model back end: ${backend} (the \`claude\` command is installed)`);
-    else todo(`Model back end: ${backend} needs the \`claude\` command (Claude Code), installed and logged in.`);
+    } else {
+      // A command of your own (llm.claudeCommand) is checked by its program: a full path, or a name on the PATH.
+      const program = config.llm.claudeCommand[0];
+      const found = /[\\/]/.test(program) ? existsSync(program) : onPath(program);
+      if (found && program === 'claude') ok(`Model back end: ${backend} (the \`claude\` command is installed)`);
+      else if (found) ok(`Model back end: ${backend} (started with your own llm.claudeCommand)`);
+      else if (program === 'claude') todo(`Model back end: ${backend} needs the \`claude\` command (Claude Code), installed and logged in.`);
+      else todo(`Model back end: ${backend} cannot find the program named first in llm.claudeCommand.`);
+    }
 
     let speechUp = false;
     try {

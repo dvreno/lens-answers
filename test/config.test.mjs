@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir, homedir } from 'node:os';
 import { join } from 'node:path';
-import { loadConfig, kbEnabled, defaults } from '../server/config.mjs';
+import { fileURLToPath } from 'node:url';
+import { loadConfig, kbEnabled, defaults, expandHome } from '../server/config.mjs';
 
 const tmpFile = (obj, raw) => {
   const f = join(mkdtempSync(join(tmpdir(), 'lens-cfg-')), 'config.json');
@@ -100,7 +101,9 @@ test('kb.command and kb.env expand ~ and switch the notes source on', () => {
   const c = loadConfig({}, file);
   assert.equal(c.kb.root, join(homedir(), 'notes'));
   assert.deepEqual(c.kb.command, [join(homedir(), 'bin/python'), join(homedir(), 'bridges/mine.py'), '--flag']);
-  assert.deepEqual(c.kb.env, { PYTHONPATH: `${join(homedir(), 'notes')}:${join(homedir(), 'notes/lib')}`, OTHER: 'x' });
+  assert.deepEqual(c.kb.env, { PYTHONPATH: `${homedir()}/notes:${homedir()}/notes/lib`, OTHER: 'x' });
+  const win = tmpFile({ kb: { env: { PYTHONPATH: '~\\notes;~\\lib;C:\\tools' } } });
+  assert.equal(loadConfig({}, win).kb.env.PYTHONPATH, `${homedir()}\\notes;${homedir()}\\lib;C:\\tools`);
   assert.equal(kbEnabled(c), true);
 });
 
@@ -114,7 +117,7 @@ test('a kb.command that is not a list of strings is refused', () => {
 });
 
 test('config.example.json is exactly the defaults: nothing personal, nothing switched on', () => {
-  const example = new URL('../config.example.json', import.meta.url).pathname;
+  const example = fileURLToPath(new URL('../config.example.json', import.meta.url));
   assert.deepEqual(JSON.parse(readFileSync(example, 'utf8')), defaults());
   assert.deepEqual(loadConfig({}, example), loadConfig({}, '/nonexistent/lens-answers/config.json'));
 });
@@ -131,4 +134,19 @@ test('a section set to the wrong kind of value is refused by name, not left to c
   assert.throws(() => loadConfig({}, tmpFile({ projects: {} })), /projects must be a list/);
   assert.throws(() => loadConfig({}, tmpFile({ sharedNotePaths: 'x' })), /sharedNotePaths must be a list/);
   assert.throws(() => loadConfig({}, tmpFile({ routing: { work: null } })), /routing\.work must be an object/);
+});
+
+test('~ expands with either slash, so a Windows-style path works too', () => {
+  assert.equal(expandHome('~\\notes\\work'), join(homedir(), 'notes\\work'));
+  assert.equal(expandHome('~/notes'), join(homedir(), 'notes'));
+  assert.equal(expandHome('~user/notes'), '~user/notes');
+});
+
+test('llm.claudeCommand defaults to the claude program and must be a list of strings', () => {
+  assert.deepEqual(loadConfig({}, '/nonexistent/lens-answers/config.json').llm.claudeCommand, ['claude']);
+  assert.deepEqual(loadConfig({}, tmpFile({ llm: { claudeCommand: ['node', '~/claude/cli.js'] } })).llm.claudeCommand,
+    ['node', join(homedir(), 'claude/cli.js')]);
+  for (const bad of ['claude', [], [''], [1]]) {
+    assert.throws(() => loadConfig({}, tmpFile({ llm: { claudeCommand: bad } })), /llm\.claudeCommand/, JSON.stringify(bad));
+  }
 });
