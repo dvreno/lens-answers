@@ -1,0 +1,4 @@
+# Text files are stored and checked out with LF line endings on every system, so tests that read
+# fixtures see the same bytes on Windows as elsewhere.
+* text=auto eol=lf
+*.ogg binary
