@@ -17,6 +17,10 @@ Only the text of a question goes to the model.
 The idea comes from EyeCues, an app for Even Realities glasses. Lens Answers is not affiliated with it; it is a
 separate project written from scratch for MemoMind glasses.
 
+
+https://github.com/user-attachments/assets/bcf157c3-c603-41e3-a871-5d2a14f2ced8
+
+
 ## Status
 
 Early, and built for one person's use. It runs in MemoMind Studio: Browser Studio for the plugin page and the
