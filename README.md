@@ -45,34 +45,56 @@ For the project, work and statute routes the answer must come from the retrieved
 the card says `Nothing solid on this one` instead of guessing. A route that is not set up is never offered to
 the model, so a question cannot be sent somewhere this server cannot search.
 
-## Setup
+## Quick start
 
-You need Node 22 or newer, a checkout of MemoMind's
-[plugin-open-platform](https://github.com/memomind-open/plugin-open-platform) (the Web SDK and Studio) next to
-this folder, a local speech-to-text server, and either the `claude` command (Claude Code, logged in) or an
-Anthropic API key.
+Install two things first: Node 22 or newer, and a way to reach Claude (Claude Code, logged in, or an Anthropic
+API key in `ANTHROPIC_API_KEY`). Then:
+
+    git clone https://github.com/dvreno/lens-answers
+    cd lens-answers
+    npm install
+    npm run setup
+
+`npm run setup` walks you through the rest. It asks before it does anything, and each step ends in one line:
+
+1. **MemoMind's Web SDK.** If it is not on your computer, setup offers to fetch it (a `git clone` of
+   [plugin-open-platform](https://github.com/memomind-open/plugin-open-platform) next to this folder) and copies
+   the SDK into `phone/vendor` (git-ignored; the SDK is MemoMind's and is never committed here).
+2. **Your config.** Created at `~/.config/lens-answers/config.json` if you have none. An existing one is never
+   overwritten; setup only changes a setting you answer a question about, and says which.
+3. **Claude.** You pick Claude Code or an API key, and setup can send one small test question to prove it
+   answers. It never asks for the key itself.
+4. **Speech-to-text.** Setup sends your speech server a half-second test clip. This is the one part it cannot
+   install for you: see "Speech-to-text" below. If your server is at another address, you can type it in.
+5. **The plugin.** Setup offers to copy it into the SDK's `examples` folder, where Desktop Studio lists it.
+6. **What to type.** It ends with the address to enter on the plugin page and where the token is (it shows
+   the token only if you say yes).
+
+```
+  ok    Node 22.11.0
+  ok    MemoMind Web SDK 0.1.0 copied to phone/vendor
+  ok    Config created at ~/.config/lens-answers/config.json
+  ok    Model back end: claude-code (the `claude` command is installed)
+  ok    Claude answered the test question
+  todo  Speech-to-text: nothing answers at http://127.0.0.1:8089. Start your speech server (README, "Speech-to-text").
+  note  Notes source: none, so work mode is off. bridge/README.md says how to add one.
+```
+
+`todo` lines need doing before the server is useful; `note` lines are optional. Run setup again whenever you
+like, or `npm run setup -- --check` to only check and ask nothing.
+
+When it says `Ready`:
+
+    npm start
+
+Open the plugin in Studio, type in the address and token setup gave you, then Save and connect. Say a
+question out loud. The server binds `127.0.0.1` only and creates the token file on first start, readable by
+you only (mode 600; Windows has no such modes, so there the file is as private as your user folder).
 
 Platforms: the server and its tests are plain Node and are run on macOS, Linux and Windows by the checks in
 `.github/workflows/test.yml`. The whole thing working together (speech server, model, Studio) has only been
 tried on a Mac so far. Paths in this README are written the macOS and Linux way; on Windows `~` is your user
 folder (`C:\Users\you`), so the config is `C:\Users\you\.config\lens-answers\config.json`.
-
-    npm install
-    npm run setup
-    npm test
-
-`npm run setup` copies the Web SDK into `phone/vendor` (git-ignored, never committed; the SDK is MemoMind's),
-creates `~/.config/lens-answers/config.json` from `config.example.json` if you have none, and checks each
-thing the server needs. It prints one line per check; `todo` lines need doing, `note` lines are optional. Run
-it again whenever you like: it never overwrites your config.
-
-Then:
-
-    npm start
-
-The server binds `127.0.0.1` only and creates `~/.config/lens-answers/token` on first run, readable by you
-only (mode 600; Windows has no such modes, so there the file is as private as your user folder). Load the
-plugin as described under "Phone plugin" and enter the server address and that token on its page.
 
 ### Speech-to-text
 
@@ -231,9 +253,9 @@ almost no quiet slices mean the detector is not finding the gaps between sentenc
 - Browser Studio: `node <plugin-open-platform>/PhoneSDK/tools/run-browser-studio.mjs --plugin $PWD/phone --port 4173`.
   It shows the plugin page and the lens, but has no microphone.
 - Desktop Studio (the MemoMind Plugin Studio app) supplies the computer's microphone as the simulated glasses
-  microphone, so the whole path can be tried there. Copy `phone/` to
-  `<plugin-open-platform>/PhoneSDK/examples/lens-answers` (Studio lists every `manifest.json` under
-  `examples/`) and copy it again after changing the plugin. Desktop Studio refuses the microphone while its
+  microphone, so the whole path can be tried there. Studio lists every `manifest.json` under
+  `<plugin-open-platform>/PhoneSDK/examples/`; `npm run setup` offers to copy `phone/` there as
+  `examples/lens-answers` (or copy it yourself), and it needs copying again after the plugin changes. Desktop Studio refuses the microphone while its
   window is not in front, and the plugin does not retry by itself: after restarting the server, click the
   Studio window, then Pause and Resume.
 - Real pickup needs the MemoMind app and glasses, which this has not been run on yet.
@@ -311,7 +333,8 @@ audio never leaves your computer.
 
 ## Scripts
 
-- `npm run setup`: first-run setup and checks (above). `npm run sdk` copies the Web SDK only.
+- `npm run setup`: the guided setup (above); `npm run setup -- --check` only checks. `npm run sdk` copies
+  the Web SDK only.
 - `npm run briefs`: build the project briefs (prints project names and written/failed only).
 - `node scripts/say-test.mjs "<sentence>"` (macOS only; needs `ffmpeg`): speaks a synthetic sentence at the running server and prints each
   server message with its time from the end of speech. It connects as the one client, replacing the phone.

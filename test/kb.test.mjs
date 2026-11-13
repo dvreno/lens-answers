@@ -236,7 +236,7 @@ test('warm() resolves false when the bridge cannot start; it never rejects', asy
 
 test('a search timeout kills the hung bridge, logs kb-timeout without the query, and the next call respawns', async () => {
   const config = defaults();
-  config.kb.timeoutMs = 200;
+  config.kb.timeoutMs = 1500; // also the time the replacement bridge gets to start and answer, so not too short
   const dir = mkdtempSync(join(tmpdir(), 'kb-test-'));
   const flag = join(dir, 'flag');
   const children = [];
@@ -262,7 +262,7 @@ test('a search timeout kills the hung bridge, logs kb-timeout without the query,
 
 test('the exit of a killed bridge does not settle requests sent to its replacement', async () => {
   const config = defaults();
-  config.kb.timeoutMs = 1000; // long enough for child 2's 500 ms reply
+  config.kb.timeoutMs = 3000; // long enough for child 2 to start and send its 500 ms reply on a busy machine
   let n = 0;
   const impl = (cmd, args, opts) => {
     n += 1;

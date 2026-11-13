@@ -32,7 +32,7 @@ const CLOSE_INTERNAL = 1011; // this session cannot work (the audio decoder did 
 const FRAME_SAMPLES = 320; // 20 ms of 16 kHz PCM, the size the real path pushes per Opus frame
 
 /** Reads the token file, creating it (32 random bytes of hex, mode 600) on first run. */
-function loadToken(tokenFile) {
+export function loadToken(tokenFile) {
   try {
     const existing = readFileSync(tokenFile, 'utf8').trim();
     if (existing) return existing;
